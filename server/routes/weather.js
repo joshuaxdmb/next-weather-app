@@ -14,6 +14,12 @@ router.post('/location', async (req, res) => {
       `http://api.openweathermap.org/geo/1.0/direct?q=${locationName}&limit=1&appid=${process.env.WEATHER_API_KEY}`
     );
     const { lat, lon } = geoloc.data[0];
+
+    const chartResponse = await axios.get(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m`
+    )
+
+    console.log(chartResponse)
     const response = await axios.get(
       `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${process.env.WEATHER_API_KEY}`
     );
@@ -28,8 +34,7 @@ router.post('/location', async (req, res) => {
     };
     const beautifulDate = date.toLocaleDateString('en-US', options);
     response.data.time = beautifulDate;
-    console.log(response.data);
-    res.status(200).json(response.data);
+    res.status(200).json({current:response.data,historical:chartResponse.data.hourly});
   } catch (e) {
     console.error('Error', e);
     res.status(500).json({ error: e.message });
